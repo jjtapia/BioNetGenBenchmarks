@@ -65,24 +65,21 @@ def start_queue(simulationSetup, repetitions, outputdirectory, queue, noOfBatche
         output, input = popen2('qsub')
         
         # Customize your options here
-        job_name = "jjtv_{0}_{1}".format(outputtype,idx)
+        job_name = "jjtv_{0}".format(idx)
         walltime = "10:00:00"
         processors = "nodes={1}:ppn={0}".format(min(queue_list[queue], repetitions/noOfBatches), nodes)
         analyzer = os.path.abspath('benchmark.py')
-        command = ['python {0}'.format(analyzer),'-s', pointer, '-o', '${SCRDIR}/',
-        '-t',outputtype
-            #'XMLExamples/curated/BIOMD%010i.xml' % self.param,
-        ]
+        command = ['python {0}'.format(analyzer),'-s', pointer, '-o', '${SCRDIR}/']
         command = ' '.join(command)
 
-        if outputtype == "atomize":
-            tail_job_string = """%s
-            cd ${SCRDIR}
-            """ % (command)
-        else:
-            tail_job_string = """cd ${SCRDIR}
-            %s
-            """ % (command)
+        #if outputtype == "atomize":
+        #    tail_job_string = """%s
+        #    cd ${SCRDIR}
+        #    """ % (command)
+        #else:
+        tail_job_string = """cd ${SCRDIR}
+        %s
+        """ % (command)
 
         job_string = """#!/bin/bash
         #PBS -N %s
