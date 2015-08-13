@@ -69,6 +69,8 @@ def bnglsimulate(bnglFile, methodList, simulationTime, repetitions, outputFile, 
         timings[bnglFile]['_'.join(method)] = []
 
 
+    with open(outputFile+'hello', 'a') as f:
+        f.write('entered method\n')
 
     try:
         bngconsole = pexpect.spawn('{0} --console'.format(getBngExecutable()), timeout=timeout)
@@ -76,9 +78,14 @@ def bnglsimulate(bnglFile, methodList, simulationTime, repetitions, outputFile, 
         print '\tloading file...'
         bngconsole.sendline('load {0}'.format(bnglFile))
         bngconsole.expect('BNG>')
+        with open(outputFile+'hello', 'a') as f:
+            f.write('loaded file\n')
+
         print '\tgenerating network...'
         bngconsole.sendline('action generate_network()')
         bngconsole.expect('BNG>')
+        with open(outputFile+'hello', 'a') as f:
+            f.write('generated network\n')
 
         print '\tsimulating...'
         for method in methodList:
@@ -90,6 +97,9 @@ def bnglsimulate(bnglFile, methodList, simulationTime, repetitions, outputFile, 
                     simulateParameters.append(method[1])
                 simulateParameters = ', '.join(simulateParameters)
                 print 'action simulate({{{0}}})'.format(simulateParameters)
+                with open(outputFile+'hello', 'a') as f:
+                    f.write('action simulate({{{0}}})\n'.format(simulateParameters))
+
                 bngconsole.sendline('action simulate({{{0}}})'.format(simulateParameters))
                 bngconsole.expect('BNG>')
                 print '_'.join(method)
@@ -98,6 +108,9 @@ def bnglsimulate(bnglFile, methodList, simulationTime, repetitions, outputFile, 
                 bngconsole.sendline('resetConcentrations()')
                 bngconsole.expect('BNG>')
                 timings[bnglFile]['_'.join(method)].append(simulationTime)
+                with open(outputFile+'hello', 'a') as f:
+                    f.write('finished simulations\n')
+
         bngconsole.close()
     except pexpect.TIMEOUT:
         bngconsole.kill(0)
@@ -126,6 +139,7 @@ def parallelHandling(simulationSetup, repetitions, function, outputDir, options 
             futures.append(executor.submit(function, simulationSetup[0], [simulationSetup[1]], 40, repetitions / workers,outputDir + '_{0}.dump'.format(idx)))
         for future in concurrent.futures.as_completed(futures, timeout=3600):
             print 'prepost'
+            print outputDir + '_{0}.dump'.format(idx)
             postExecutionFunction(future.result(), outputDir)
 
 
@@ -191,10 +205,10 @@ def qsubInterface():
     outputfile = os.path.join(namespace.output, settings['simulationSetup'].split(os.sep)[-1])
 
     parallelHandling(settings['simulationSetup'], settings['repetitions'], bnglsimulate, outputfile, postExecutionFunction=dummy)
-    outputfile = os.path.join(namespace.output, settings['simulationSetup'].split(os.sep)[-1])
-    with open(outputfile, 'wb') as f:
-        pickle.dump(dict(tempResults), f)
+    #outputfile = os.path.join(namespace.output, settings['simulationSetup'].split(os.sep)[-1])
+    #with open(outputfile, 'wb') as f:
+    #    pickle.dump(dict(tempResults), f)
 
 if __name__ == "__main__":
-    main()
-    #qsubInterface()
+    #main()
+    qsubInterface()
