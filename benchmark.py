@@ -103,6 +103,8 @@ def bnglsimulate(bnglFile, methodList, simulationTime, repetitions, timeout=600)
         bngconsole.close()
     except pexpect.TIMEOUT:
         bngconsole.kill(0)
+    except ValueError:
+        return -1
     return timings
 
 def dummy(result,output):
@@ -125,6 +127,9 @@ def parallelHandling(simulationSetup, repetitions, function, outputDir, options 
             futures.append(executor.submit(function, simulationSetup[0], [simulationSetup[1]], 40, repetitions / workers))
         for future in concurrent.futures.as_completed(futures, timeout=3600):
             print 'prepost'
+            if future.result == -1:
+                print 'errorerrorerror',simulationSetup
+                continue
             print future.result()
             print 'postpost'
             postExecutionFunction(future.result(), outputDir)
@@ -141,8 +146,8 @@ def main():
     plaOptions = list(itertools.product(*plaOptions))
     simulationMethods = [['pla', 'pla_config=>' + '|'.join(x)] for x in plaOptions]
     simulationMethods.append(['ode', ''])
-
-    fileName = ['bnglTest/egfr_net.bngl']
+    simulationMethods.append(['pla', 'pla_config=>"fEuler|pre-neg:sb|eps=0.01"'])
+    fileName = ['bnglTest/toy-jim.bngl']
     fileNameOptionsTemp = [fileName, simulationMethods]
     simulationSetup = list(itertools.product(*fileNameOptionsTemp))
 
@@ -195,5 +200,5 @@ def qsubInterface():
         pickle.dump(dict(tempResults), f)
 
 if __name__ == "__main__":
-    # main()
-    qsubInterface()
+    main()
+    #qsubInterface()
