@@ -40,7 +40,7 @@ queue_list= {'noc_64_core':64, 'serial_queue':1, 'dept_24_core':24, 'dmz_core36'
 import progressbar
 import tempfile
 import yaml
-def start_queue(simulationSetup, repetitions, outputdirectory, queue, noOfBatches, nodes=1):
+def start_queue(simulationSetup, repetitions, outputdirectory, queue, noOfBatches=1, nodes=1):
     """
     sends a batch job with the qsub queue and executes a command over it.
     using PBS commands
@@ -57,8 +57,7 @@ def start_queue(simulationSetup, repetitions, outputdirectory, queue, noOfBatche
         #fileNameSubset = fileNameSet[idx:min(idx+batchSize,len(fileNameSet))]
         settings = {}
         settings['simulationSetup'] = simulationSetup[idx]
-        settings['repetitions'] = repetitions/batchSize
-
+        settings['repetitions'] = repetitions / noOfBatches
         pointer = os.path.abspath(tempfile.mkstemp(suffix='.yml',text=True,dir='./tmp')[1])
         with open(pointer,'w') as f:
             f.write(yaml.dump(settings))
@@ -177,4 +176,5 @@ if __name__ == "__main__":
 
     fileNameOptionsTemp = [fileName, simulationOptions]
     simulationSetup = list(itertools.product(*fileNameOptionsTemp))
-    start_queue(simulationSetup, namespace.repetitions, namespace.output, namespace.queue, namespace.batch)
+    batch = namespace.batch if namespace.batch else 1
+    start_queue(simulationSetup, int(namespace.repetitions), namespace.output, namespace.queue, int(batch))

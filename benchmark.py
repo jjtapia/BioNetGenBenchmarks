@@ -5,14 +5,14 @@ import time
 import collections
 import numpy as np 
 import fnmatch
-import pickle
+import cPickle as pickle
 from copy import deepcopy
 import itertools
 from subprocess import call        
 import multiprocessing as mp
 import progressbar
 import concurrent.futures
-
+import yaml
 
 home = os.path.expanduser("~")
 bngExecutable = os.path.join(home, 'workspace', 'bionetgen', 'bng2', 'BNG2.pl')
@@ -144,7 +144,7 @@ def main():
     fileName = ['bnglTest/egfr_net.bngl']
     fileNameOptionsTemp = [fileName, simulationMethods]
     simulationSetup = list(itertools.product(*fileNameOptionsTemp))
-    
+
     print simulationSetup
     '''
     for idx, bngl in enumerate(simulationSetup[0:3]):
@@ -156,7 +156,7 @@ def main():
             continue
     '''
     tempResults = collections.defaultdict(lambda: collections.defaultdict(list))
-    parallelHandling(simulationSetup[-1], 3, bnglsimulate, tempResults,postExecutionFunction=mergeTimmings)
+    parallelHandling(simulationSetup[-1], 3, bnglsimulate, tempResults, postExecutionFunction=mergeTimmings)
     print tempResults
 
     """
@@ -166,5 +166,33 @@ def main():
         pickle.dump(dict(timings2), f)
     """
 
+
+def defineConsole():
+    parser = argparse.ArgumentParser(description='SBML to BNGL translator')
+    parser.add_argument('-s', '--settings', type=str, help='settings file')
+    parser.add_argument('-o', '--output', type=str, help='output directory')
+    parser.add_argument('-t', '--type', type=str, help='atomize or convert to bng-xml')
+    return parser
+
+
+def loadFilesFromYAML(yamlFile):
+    with open(yamlFile, 'r') as f:
+        yamlsettings = yaml.load(f)
+
+    print yamlsettings
+    return yamlsettings
+
+
+def qsubInterface():
+    parser = defineConsole()
+    namespace = parser.parse_args()
+    settings = loadFilesFromYaml(namespace.settings)
+    tempResults = collections.defaultdict(lambda: collections.defaultdict(list))
+    parallelHandling(settings['simulationSetup'], settings['repetitions'], bnglsimulate, tempResults, postExecutionFunction=mergeTimmings)
+    outputfile = os.path.join(namespace.output, settings['simulationSetup'].split(os.sep)[-1])
+    with open(outputfile, 'wb') as f:
+        pickle.dump(dict(tempResults), f)
+
 if __name__ == "__main__":
-    main()
+    # main()
+    qsubInterface()
