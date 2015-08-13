@@ -58,7 +58,7 @@ def simulateMethod(bngconsole, method, simulationTime):
     return float(bngconsole.before.split('\n')[-2].split(' ')[-2])
     
 
-def bnglsimulate(bnglFile, methodList, simulationTime, repetitions, outputFile, timeout=600):
+def bnglsimulate(bnglFile, methodList, simulationTime, repetitions, outputFile, timeout=10000):
     """
     perform an execution of model located in file 'bnglFile' using methods in methodList
     """
@@ -68,11 +68,9 @@ def bnglsimulate(bnglFile, methodList, simulationTime, repetitions, outputFile, 
     for method in methodList:
         timings[bnglFile]['_'.join(method)] = []
 
-
-
     try:
-        with open(outputFile, 'w') as f:
-            f.write('{0} --console'.format(getBngExecutable()))
+        #with open(outputFile, 'w') as f:
+        #    f.write('{0} --console'.format(getBngExecutable()))
         bngconsole = pexpect.spawn('{0} --console'.format(getBngExecutable()), timeout=timeout)
         bngconsole.expect('BNG>')
         print '\tloading file...'
@@ -123,7 +121,7 @@ def parallelHandling(simulationSetup, repetitions, function, outputDir, options 
     workers = mp.cpu_count() - 1
     i = 0
     print 'running in {0} cores'.format(workers)
-    timmings = function(simulationSetup[0], [simulationSetup[1]], 40, repetitions, outputfile + '_{0}.dump'.format(abcd))
+    timmings = function(simulationSetup[0], [simulationSetup[1]], 40, repetitions, '')
     with open(outputfile, 'wb') as f:
         pickle.dump(timmings, f)
     """
