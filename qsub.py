@@ -162,6 +162,8 @@ def defineConsole():
     parser.add_argument('-q','--queue',type=str,help='queue to run in')
     parser.add_argument('-b','--batch',type=str,help='queue to run in')
     parser.add_argument('-r','--repetitions',type=str,help='queue to run in')
+    parser.add_argument('-n','--nodes',type=str,help='number of nodes')
+
     return parser
 
 
@@ -174,4 +176,4 @@ if __name__ == "__main__":
     fileNameOptionsTemp = [fileName, simulationOptions]
     simulationSetup = list(itertools.product(*fileNameOptionsTemp))
     batch = namespace.batch if namespace.batch else 1
-    start_queue(simulationSetup, int(namespace.repetitions), namespace.output, namespace.queue, int(batch))
+    start_queue(simulationSetup, int(namespace.repetitions), namespace.output, namespace.queue, int(batch), nodes=namespace.nodes)
