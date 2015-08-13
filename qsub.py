@@ -128,7 +128,7 @@ def getSimulationSetup():
 
     plaOptions = [['fEuler', 'midpt', 'rk4'], ['pre-neg:sb', 'Anderson:sb', 'pre-eps:sb'], ['0.01','0.03','0.05']]
     plaOptions = list(itertools.product(*plaOptions))
-    simulationMethods = [['pla', 'pla_config=>' + '|'.join(x)] for x in plaOptions]
+    simulationMethods = [['pla', 'pla_config=>"' + '|'.join(x) + '"'] for x in plaOptions]
     simulationMethods.append(['ssa', ''])
 
     return simulationMethods
