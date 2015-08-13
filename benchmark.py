@@ -58,7 +58,7 @@ def simulateMethod(bngconsole, method, simulationTime):
     return float(bngconsole.before.split('\n')[-2].split(' ')[-2])
     
 
-def bnglsimulate(bnglFile, methodList, simulationTime, repetitions, timeout=600):
+def bnglsimulate(bnglFile, methodList, simulationTime, repetitions, outputFile, timeout=600):
     """
     perform an execution of model located in file 'bnglFile' using methods in methodList
     """
@@ -97,17 +97,16 @@ def bnglsimulate(bnglFile, methodList, simulationTime, repetitions, timeout=600)
                 print simulationTime
                 bngconsole.sendline('resetConcentrations()')
                 bngconsole.expect('BNG>')
-
-                
                 timings[bnglFile]['_'.join(method)].append(simulationTime)
         bngconsole.close()
     except pexpect.TIMEOUT:
         bngconsole.kill(0)
-    except ValueError:
-        return -1
-    return timings
 
-def dummy(result,output):
+    with open(outputFile, 'wb') as f:
+        pickle.dump(dict(timings), f)
+
+
+def dummy(result, output):
     pass
 
 def mergeTimmings(timmings, finalDictionary):
@@ -121,17 +120,12 @@ def parallelHandling(simulationSetup, repetitions, function, outputDir, options 
     i = 0
     print 'running in {0} cores'.format(workers)
     with concurrent.futures.ProcessPoolExecutor(max_workers=workers) as executor:
-        for _ in range(repetitions):
-            #function(simulationSetup[0],[simulationSetup[1]], 40, repetitions / workers)
+        #function(simulationSetup[0],[simulationSetup[1]], 40, repetitions / workers,outputfile + '_{0}.dump'.format(abcd)))
+        for idx in range(repetitions):
             print function,simulationSetup,repetitions/workers
-            futures.append(executor.submit(function, simulationSetup[0], [simulationSetup[1]], 40, repetitions / workers))
+            futures.append(executor.submit(function, simulationSetup[0], [simulationSetup[1]], 40, repetitions / workers,outputDir + '_{0}.dump'.format(idx)))
         for future in concurrent.futures.as_completed(futures, timeout=3600):
             print 'prepost'
-            if future.result == -1:
-                print 'errorerrorerror',simulationSetup
-                continue
-            print future.result()
-            print 'postpost'
             postExecutionFunction(future.result(), outputDir)
 
 
@@ -162,7 +156,7 @@ def main():
             continue
     '''
     tempResults = collections.defaultdict(lambda: collections.defaultdict(list))
-    parallelHandling(simulationSetup[-1], 3, bnglsimulate, tempResults, postExecutionFunction=mergeTimmings)
+    parallelHandling(simulationSetup[-1], 3, bnglsimulate, './output', postExecutionFunction=dummy)
     print tempResults
 
     """
@@ -194,7 +188,9 @@ def qsubInterface():
     namespace = parser.parse_args()
     settings = loadFilesFromYaml(namespace.settings)
     tempResults = collections.defaultdict(lambda: collections.defaultdict(list))
-    parallelHandling(settings['simulationSetup'], settings['repetitions'], bnglsimulate, tempResults, postExecutionFunction=mergeTimmings)
+    outputfile = os.path.join(namespace.output, settings['simulationSetup'].split(os.sep)[-1])
+
+    parallelHandling(settings['simulationSetup'], settings['repetitions'], bnglsimulate, outputfile, postExecutionFunction=dummy)
     outputfile = os.path.join(namespace.output, settings['simulationSetup'].split(os.sep)[-1])
     with open(outputfile, 'wb') as f:
         pickle.dump(dict(tempResults), f)
