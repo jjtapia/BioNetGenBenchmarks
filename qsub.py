@@ -67,7 +67,7 @@ def start_queue(simulationSetup, repetitions, outputdirectory, queue, noOfBatche
         # Customize your options here
         job_name = "jjtv_{0}".format(idx)
         walltime = "10:00:00"
-        processors = "nodes={1}:ppn={0}".format(min(queue_list[queue], repetitions/noOfBatches), nodes)
+        processors = "nodes={1}:ppn={0}".format(min(queue_list[queue], 8), nodes)
         analyzer = os.path.abspath('benchmark.py')
         command = ['python {0}'.format(analyzer),'-s', pointer, '-o', '${SCRDIR}/']
         command = ' '.join(command)
