@@ -14,6 +14,7 @@ import progressbar
 import concurrent.futures
 import yaml
 import argparse
+import random 
 
 home = os.path.expanduser("~")
 bngExecutable = os.path.join(home, 'workspace', 'bionetgen', 'bng2', 'BNG2.pl')
@@ -43,7 +44,8 @@ def simulateMethod(bngconsole, method, simulationTime):
     """
     time and execute the BNG simulate method corresponding to parameter 'method' and 'simulationTime'
     """
-    simulateParameters = ['method=>"{0}"'.format(method[0]), 't_end=>"{0}"'.format(simulationTime)]
+    simulateParameters = ['method=>"{0}"'.format(method[0]), 't_end=>"{0}"'.format(simulationTime), 
+                          'suffix=>"{0}'.format(method[1].split('=>')[1]) + '_' + hex(random.getrandbits(128))[3:10]]
     if method[1] != '':
         simulateParameters.append(method[1])
     simulateParameters = ', '.join(simulateParameters)
@@ -85,7 +87,8 @@ def bnglsimulate(bnglFile, methodList, simulationTime, repetitions, outputFile, 
             print('\t{0} analysis'.format(method))
             for _ in range(0, repetitions):
                 #simulate function
-                simulateParameters = ['method=>"{0}"'.format(method[0]), 't_end=>"{0}"'.format(simulationTime)]
+                simulateParameters = ['method=>"{0}"'.format(method[0]), 't_end=>"{0}"'.format(simulationTime), 
+                                      'suffix=>{0}'.format(method[1].split('=>')[1])[:-1] + '_' + hex(random.getrandbits(128))[3:10] + '"', 'n_steps=>20']
                 if method[1] != '':
                     simulateParameters.append(method[1])
                 simulateParameters = ', '.join(simulateParameters)
@@ -122,7 +125,7 @@ def parallelHandling(simulationSetup, repetitions, function, outputDir, options 
     i = 0
     print 'running in {0} cores'.format(workers)
     timmings = function(simulationSetup[0], [simulationSetup[1]], 40, repetitions, '')
-    with open(outputfile, 'wb') as f:
+    with open(outputDir + '.dump', 'wb') as f:
         pickle.dump(timmings, f)
     """
     with concurrent.futures.ProcessPoolExecutor(max_workers=workers) as executor:
@@ -203,5 +206,5 @@ def qsubInterface():
     #    pickle.dump(dict(tempResults), f)
 
 if __name__ == "__main__":
-    #main()
-    qsubInterface()
+    main()
+    #qsubInterface()
