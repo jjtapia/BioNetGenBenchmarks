@@ -13,6 +13,7 @@ import multiprocessing as mp
 import progressbar
 import concurrent.futures
 import yaml
+import argparse
 
 home = os.path.expanduser("~")
 bngExecutable = os.path.join(home, 'workspace', 'bionetgen', 'bng2', 'BNG2.pl')
